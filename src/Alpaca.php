@@ -130,7 +130,7 @@ class Alpaca
 
         if (is_null($domain)) {
             if ($this->paper === true) {
-                $domain = "https://paper-api.alpaca.markets/v2";
+                $domain = "https://paper-api.alpaca.markets";
             } else {
                 $domain = "https://api.alpaca.markets";
             }
