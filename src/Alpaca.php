@@ -370,6 +370,8 @@ class Alpaca
             "time_in_force" => $time_in_force,
         ];
 
+        info('create order params', $body);
+
         if (!is_null($limit_price)) {
             $body["limit_price"] = $limit_price;
         }
@@ -395,6 +397,8 @@ class Alpaca
                 $body[$key] = $val;
             }
         }
+
+        info('final params', $body);
 
         return $this->_request("orders", [], "POST", $body);
     }
@@ -880,7 +884,7 @@ class Alpaca
 
     /**
      * Returns latest trade for the requested security.
-     * 
+     *
      * @link https://alpaca.markets/docs/api-documentation/api-v2/market-data/alpaca-data-api-v2/historical/#latest-trade
      *
      * @param string $symbol The symbol to query for
@@ -892,9 +896,57 @@ class Alpaca
         return $this->_request("stocks/{$symbol}/trades/latest", [], "GET", null, "https://data.alpaca.markets", "v2");
     }
 
+    public function getCryptoSnapshots($symbol)
+    {
+        return $this->_request(
+            "crypto/us/snapshots",
+            ['symbols' => $symbol],
+            "GET",
+            null,
+            "https://data.alpaca.markets",
+            "v1beta3",
+        );
+    }
+
+    public function getLatestCryptoOrderbooks($symbol)
+    {
+        return $this->_request(
+            "crypto/us/latest/orderbooks",
+            ['symbols' => $symbol],
+            "GET",
+            null,
+            "https://data.alpaca.markets",
+            "v1beta3",
+        );
+    }
+
+    public function getLatestCryptoQuote($symbol)
+    {
+        return $this->_request(
+            "crypto/us/latest/quotes",
+            ['symbols' => $symbol],
+            "GET",
+            null,
+            "https://data.alpaca.markets",
+            "v1beta3",
+        );
+    }
+
+    public function getLatestCryptoTrade($symbol)
+    {
+        return $this->_request(
+            "crypto/us/latest/trades",
+            ['symbols' => $symbol],
+            "GET",
+            null,
+            "https://data.alpaca.markets",
+            "v1beta3",
+        );
+    }
+
     /**
      * Returns quote (NBBO) historical data for the requested security.
-     * 
+     *
      * @link https://alpaca.markets/docs/api-documentation/api-v2/market-data/alpaca-data-api-v2/historical/#quotes
      *
      * @param string $symbol The symbol to query for
@@ -956,9 +1008,10 @@ class Alpaca
      *
      * @return Response
      */
-    public function getBars($timeframe, $symbol, $start, $end, $limit = null, $page_token = null)
+    public function getBars($timeframe, $symbol, $start, $end, $crypto = true, $limit = null, $page_token = null)
     {
         $qs = [];
+        $type = $crypto ? "crypto" : "stocks";
 
         if (!is_null($timeframe)) {
             $qs["timeframe"] = $timeframe;
@@ -980,15 +1033,38 @@ class Alpaca
             $qs["page_token"] = $page_token;
         }
 
-        // print_r($qs);
-        // return null;
+        return $this->_request("$type/{$symbol}/bars", $qs, "GET", null, "https://data.alpaca.markets", "v2");
+    }
 
-        return $this->_request("stocks/{$symbol}/bars", $qs, "GET", null, "https://data.alpaca.markets", "v2");
+    public function getCryptoBars($timeframe, $symbol, $start, $end, $limit = null, $page_token = null)
+    {
+        $result = $this->_request(
+            "crypto/us/bars",
+            [
+                'symbols' => $symbol,
+                'timeframe' => $timeframe,
+                'limit' => $limit,
+                'start' => $start,
+                'end' => $end,
+                'page_token' => $page_token
+            ],
+            "GET",
+            null,
+            "https://data.alpaca.markets",
+            "v1beta3",
+        );
+
+        return $result;
+    }
+
+    public function getLatestCryptoBars($symbol, $feed = 'sip', $currency = 'USD', $page_token = null)
+    {
+        return $this->_request("crypto/us/latest/bars", ['symbols' => $symbol], "GET", null, "https://data.alpaca.markets", "v1beta3");
     }
 
     /**
      * Returns the snapshots for the requested securities.
-     * 
+     *
      * @link https://alpaca.markets/docs/api-documentation/api-v2/market-data/alpaca-data-api-v2/historical/#snapshot---multiple-tickers
      *
      * @param string|array $symbols Array or comma-separated string of symbols to query for.
@@ -1008,7 +1084,7 @@ class Alpaca
 
     /**
      * Returns the snapshot for the requested security.
-     * 
+     *
      * @link https://alpaca.markets/docs/api-documentation/api-v2/market-data/alpaca-data-api-v2/historical/#snapshot---ticker
      *
      * @param [type] $symbol
