@@ -370,8 +370,6 @@ class Alpaca
             "time_in_force" => $time_in_force,
         ];
 
-        info('create order params', $body);
-
         if (!is_null($limit_price)) {
             $body["limit_price"] = $limit_price;
         }
@@ -397,8 +395,6 @@ class Alpaca
                 $body[$key] = $val;
             }
         }
-
-        info('final params', $body);
 
         return $this->_request("orders", [], "POST", $body);
     }
